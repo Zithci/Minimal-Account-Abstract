@@ -22,10 +22,10 @@ contract Handler is Test {
     function execute(uint256 amount) public {
         if (address(minimalAccount).balance == 0) {
             return;
-        }    
+        }
         amount = bound(amount, 1, address(minimalAccount).balance);
         vm.prank(owner);
         minimalAccount.execute(makeAddr("any-target"), amount, "");
         timesExecuteCalled++;
-    }        
+    }
 }

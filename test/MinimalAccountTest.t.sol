@@ -14,7 +14,7 @@ contract MinimalAccountTest is Test {
 
     MinimalAccount public minimalAccount;
     HelperConfig public helperConfig;
-    
+
     address public entryPoint;
     address public owner;
     uint256 public ownerKey;
@@ -23,11 +23,11 @@ contract MinimalAccountTest is Test {
         // Step 1: Panggil script deploy kita
         DeployMinimalAccount deployer = new DeployMinimalAccount();
         (minimalAccount, helperConfig) = deployer.run();
-        
+
         // Step 2: Ambil config-nya (Biar test sinkron ama script deploy)
         (entryPoint, owner) = helperConfig.activeNetworkConfig();
-        
-        // Karena di HelperConfig kita pake burner address, 
+
+        // Karena di HelperConfig kita pake burner address,
         // kita butuh key-nya buat ngetest tanda tangan.
         // Kita timpa dikit buat testing biar dapet private key-nya.
         (owner, ownerKey) = makeAddrAndKey("owner");
@@ -43,16 +43,16 @@ contract MinimalAccountTest is Test {
         PackedUserOperation memory userOp;
         userOp.sender = address(minimalAccount);
         userOp.nonce = 0;
-        
+
         bytes32 userOpHash = keccak256(abi.encode("test-hash"));
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
-        
+
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey, ethSignedMessageHash);
         userOp.signature = abi.encodePacked(r, s, v);
-        
+
         vm.prank(entryPoint);
         uint256 validationData = minimalAccount.validateUserOp(userOp, userOpHash, 0);
-        
+
         assertEq(validationData, SIG_VALIDATION_SUCCESS);
     }
 
@@ -80,7 +80,7 @@ contract MinimalAccountTest is Test {
     function testNonOwnerCannotExecute() public {
         address nonOwner = makeAddr("hacker");
         address dest = makeAddr("destination");
-        
+
         vm.prank(nonOwner);
         // Kita expect transaksi ini bakal mental/revert
         vm.expectRevert(MinimalAccount.MinimalAccount__NotEntryPointOrOwner.selector);
@@ -90,7 +90,7 @@ contract MinimalAccountTest is Test {
     function testEntryPointCanExecute() public {
         address dest = makeAddr("destination");
         uint256 value = 1 ether;
-        
+
         vm.deal(address(minimalAccount), value);
 
         // EntryPoint juga harusnya bisa manggil execute
@@ -104,12 +104,12 @@ contract MinimalAccountTest is Test {
         // Limit the fuzzing range to a reasonable amount of ETH
         value = bound(value, 1, 1000 ether);
         address dest = makeAddr("fuzz-destination");
-        
+
         vm.deal(address(minimalAccount), value);
-        
+
         vm.prank(owner);
         minimalAccount.execute(dest, value, "");
-        
+
         assertEq(dest.balance, value);
         assertEq(address(minimalAccount).balance, 0);
     }

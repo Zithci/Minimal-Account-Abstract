@@ -18,16 +18,16 @@ contract Invariants is StdInvariant, Test {
         DeployMinimalAccount deployer = new DeployMinimalAccount();
         (minimalAccount, helperConfig) = deployer.run();
         (, owner) = helperConfig.activeNetworkConfig();
-        
+
         // Initializing the handler
         handler = new Handler(minimalAccount, owner);
 
-        // Change the target, now Foundry will spam the handler 
+        // Change the target, now Foundry will spam the handler
         targetContract(address(handler));
     }
 
     function invariant_testEntryPointNeverChanges() public view {
-        (address entryPoint, ) = helperConfig.activeNetworkConfig();
+        (address entryPoint,) = helperConfig.activeNetworkConfig();
         address actualEntryPoint = minimalAccount.getEntryPoint();
         assertEq(actualEntryPoint, entryPoint);
     }

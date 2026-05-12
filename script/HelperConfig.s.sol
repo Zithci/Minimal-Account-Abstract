@@ -44,8 +44,7 @@ contract HelperConfig is Script {
 
     function getSepoliaEthConfig() public view returns (NetworkConfig memory) {
         return NetworkConfig({
-            entryPoint: vm.parseAddress("0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"),
-            account: BURNER_WALLET
+            entryPoint: vm.parseAddress("0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"), account: BURNER_WALLET
         });
     }
 

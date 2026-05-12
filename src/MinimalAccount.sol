@@ -48,16 +48,16 @@ contract MinimalAccount is IAccount, Ownable {
     function execute(address dest, uint256 value, bytes calldata func) external {
         // STEP 1: Security check! Who should be able to call this?
         // Hint: Only EntryPoint or Owner
-        if(msg.sender != owner() && msg.sender !=  i_entryPoint){
-            revert MinimalAccount__NotEntryPointOrOwner() ;
+        if (msg.sender != owner() && msg.sender != i_entryPoint) {
+            revert MinimalAccount__NotEntryPointOrOwner();
         }
-        
+
         // STEP 2: Execute the call to the destination
         // Hint: Use (bool success, bytes memory result) = dest.call{value: value}(func);
-        (bool success, bytes memory  result) = dest.call{value : value }(func);
+        (bool success, bytes memory result) = dest.call{value: value}(func);
 
         // STEP 3: Handle the failure case
-        if(!success) {
+        if (!success) {
             revert MinimalAccount__CallFailed(result);
         }
     }
@@ -65,14 +65,14 @@ contract MinimalAccount is IAccount, Ownable {
     /**
      * @notice EntryPoint calls this to validate the transaction
      */
-    function validateUserOp(
-        PackedUserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 missingAccountFunds
-    ) external requireFromEntryPoint returns (uint256 validationData) {
+    function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+        external
+        requireFromEntryPoint
+        returns (uint256 validationData)
+    {
         // 1. Validate the signature
         validationData = _validateSignature(userOp, userOpHash);
-        
+
         // 2. Pay for the gas (Entry Point expects this)
         _payPrefund(missingAccountFunds);
     }
@@ -84,18 +84,19 @@ contract MinimalAccount is IAccount, Ownable {
     /**
      * @notice Internal helper to check if the owner signed the userOp
      */
-    function _validateSignature(
-        PackedUserOperation calldata userOp,
-        bytes32 userOpHash
-    ) internal view returns (uint256 validationData) {
+    function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
+        internal
+        view
+        returns (uint256 validationData)
+    {
         // 1. Convert userOpHash to EthSignedMessageHash
         bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
 
         // 2. Recover signer using ECDSA.recover
         address actualSigner = ECDSA.recover(ethSignedHash, userOp.signature);
-        
+
         // 3. Return SIG_VALIDATION_SUCCESS or SIG_VALIDATION_FAILED
-        if(actualSigner != owner()){
+        if (actualSigner != owner()) {
             return SIG_VALIDATION_FAILED;
         }
         return SIG_VALIDATION_SUCCESS;
@@ -112,7 +113,7 @@ contract MinimalAccount is IAccount, Ownable {
     }
 
     receive() external payable {}
-    
+
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
     /////////////////////////////////////////////////////////////*/
