@@ -1,66 +1,58 @@
-## Foundry
+# Minimal Account Abstraction
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+An ERC-4337 compliant smart contract wallet implementation built with Foundry. Demonstrates core account abstraction concepts: custom signature validation, EntryPoint integration, and on-chain execution.
 
-Foundry consists of:
+## How It Works
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
+```
+User signs UserOperation
+        ↓
+EntryPoint calls validateUserOp()
+        ↓
+MinimalAccount verifies ECDSA signature against owner
+        ↓
+EntryPoint calls execute() to run the transaction
 ```
 
-### Test
+## Contract
 
-```shell
-$ forge test
+**`MinimalAccount.sol`**
+- Implements `IAccount` (ERC-4337 interface)
+- ECDSA signature validation — only the owner can authorize transactions
+- `execute()` — runs arbitrary calls to any address, callable by owner or EntryPoint
+- `validateUserOp()` — validates signature and prefunds EntryPoint for gas
+
+## Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| EntryPoint | Singleton contract that orchestrates all ERC-4337 transactions |
+| UserOperation | Struct containing transaction data + signature |
+| `missingAccountFunds` | ETH the wallet must send to EntryPoint to cover gas |
+| ECDSA validation | `recover(ethSignedHash, signature) == owner` |
+
+## Running Tests
+
+```bash
+forge install
+forge test
 ```
 
-### Format
+**8 tests** covering: owner signature validation, non-owner rejection, execute access control, fuzz testing, and invariant testing (128,000+ calls).
 
-```shell
-$ forge fmt
+## Deploy
+
+```bash
+# Local
+forge script script/DeployMinimalAccount.s.sol --rpc-url http://localhost:8545 --broadcast
+
+# Sepolia
+forge script script/DeployMinimalAccount.s.sol --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast
 ```
 
-### Gas Snapshots
+## Tech Stack
 
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- Solidity 0.8.24
+- Foundry
+- ERC-4337 (`eth-infinitism/account-abstraction`)
+- OpenZeppelin (ECDSA, Ownable)
